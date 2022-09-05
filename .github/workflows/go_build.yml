@@ -16,9 +16,21 @@ jobs:
         go-version: 1.18
         
     - name: Golang info
-      run: go env -w GO111MODULE=on && go env
+      run: go env -w GO111MODULE=auto && go env
       
-    - name: file list
-      run: ls
+    - name: download
+      run: go mod download
       
-
+    - name: build
+      run: |
+       go build main.go -o TpScan_linux_amd64
+       CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go -o TpScan_Windows_amd64.exe
+       CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build main.go -o TpScan_darwin_amd64
+       
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          TpScan_Windows_amd64.exe
+          TpScan_darwin_amd64
+          TpScan_linux_amd64
