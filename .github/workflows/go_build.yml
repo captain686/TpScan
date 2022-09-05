@@ -1,7 +1,13 @@
 name: Go
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Release Tags'
+      body:
+        description: 'Release Info'
+
 
 jobs:
 
@@ -30,6 +36,8 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
+        name: ${{ github.event.inputs.tags }}
+        body: ${{ github.event.inputs.body }}
         files: |
           TpScan_Windows_amd64.exe
           TpScan_darwin_amd64
