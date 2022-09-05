@@ -54,21 +54,18 @@ func VulExist(rule Rules, host string) (*string, *string, bool) {
 		data = strings.Replace(data, "randomStr", randomStr, -1)
 	}
 	var req Req
-	if followRedirects == "" {
+	if followRedirects == "" || followRedirects == "true"{
 		req = Req{Method: method, Host: host, Path: path, Data: []byte(data), Header: headers, Redirect: true, ProxyUrl: proxy}
-	} else {
+	} else if followRedirects == "false"{
 		req = Req{Method: method, Host: host, Path: path, Data: []byte(data), Header: headers, ProxyUrl: proxy}
 	}
 	statusCode, response, err := req.Requests()
 	if IfErr(err) {
 		return nil, nil, false
 	}
-	//fmt.Println(string(*response))
 	responseExpression := rule.Expression
 	result := responseExpression["result"]
 	responseStatus := responseExpression["response_status"]
-	//fmt.Println(responseStatus)
-	//fmt.Println(result)
 	var res bool
 	rulesInResponse := strings.TrimRight(responseExpression["inResponse"], "\n")
 	rulesInResponse = strings.Replace(rulesInResponse, "randomStr", randomStr, -1)
