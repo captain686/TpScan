@@ -29,9 +29,9 @@ jobs:
       
     - name: build
       run: |
-       go build main.go -o TpScan_linux_amd64
-       CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go -o TpScan_Windows_amd64.exe
-       CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build main.go -o TpScan_darwin_amd64
+       go build -o TpScan_linux_amd64 main.go
+       CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o TpScan_Windows_amd64.exe main.go
+       CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o TpScan_darwin_amd64 main.go
        
     - name: Release
       uses: softprops/action-gh-release@v1
