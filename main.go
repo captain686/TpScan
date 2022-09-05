@@ -41,7 +41,7 @@ func getArgs() (*string, string) {
 			return &filePath, "filePath"
 		}
 	}
-	if flag.NFlag() > 1 {
+	if flag.NFlag() > 1 || flag.NFlag() == 0 {
 		fmt.Fprintf(os.Stderr, "Usage of question:\n")
 		flag.PrintDefaults()
 	}
