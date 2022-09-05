@@ -1,4 +1,4 @@
-# TpScan
+![TpScan](https://socialify.git.ci/captain686/TpScan/image?font=Raleway&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Light)
 
 ## ☃️What
 
