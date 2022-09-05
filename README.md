@@ -56,7 +56,7 @@
   #randomStr为占位符，会被自动替换为10位随机字符
   
   expression:
-  r1 || r2
+    r1 || r2
   #  r1 && r2
   #支持逻辑运算
   
