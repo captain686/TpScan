@@ -19,33 +19,18 @@ func init() {
 	fmt.Println(banner)
 }
 
-func getArgs() (*string, string) {
-	var (
-		url      string
-		filePath string
-	)
+var (
+	url      string
+	filePath string
+)
+
+func init() {
 	flag.StringVar(&url, "u", "", "Target Url")
 	flag.StringVar(&filePath, "f", "", "TargetFile Path")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of question:\n")
 		flag.PrintDefaults()
 	}
-	flag.Parse()
-	if flag.NFlag() == 1 {
-		if url != "" {
-			//fmt.Println(url)
-			return &url, "url"
-		}
-		if filePath != "" {
-			fmt.Println(filePath)
-			return &filePath, "filePath"
-		}
-	}
-	if flag.NFlag() > 1 || flag.NFlag() == 0 {
-		fmt.Fprintf(os.Stderr, "Usage of question:\n")
-		flag.PrintDefaults()
-	}
-	return nil, ""
 }
 
 func fileRead(path string) <-chan *string {
@@ -70,13 +55,19 @@ func fileRead(path string) <-chan *string {
 }
 
 func main() {
-	value, valueType := getArgs()
-	if valueType == "url" {
-		util.ExpExecutor(*value)
-	}
-	if valueType == "filePath" {
-		for target := range fileRead(*value) {
-			util.ExpExecutor(*target)
+	flag.Parse()
+	if flag.NFlag() == 1 {
+		if url != "" {
+			util.ExpExecutor(url)
 		}
+		if filePath != "" {
+			for target := range fileRead(filePath) {
+				util.ExpExecutor(*target)
+			}
+		}
+	}
+	if flag.NFlag() > 1 {
+		fmt.Fprintf(os.Stderr, "Usage of question:\n")
+		flag.PrintDefaults()
 	}
 }

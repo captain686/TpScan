@@ -1,6 +1,7 @@
 package util
 
 import (
+	"embed"
 	"fmt"
 	"github.com/aliyun/texpr"
 	"io/ioutil"
@@ -12,6 +13,17 @@ import (
 
 var randomStr = RandomString(10)
 
+//go:embed exploit
+var Pocs embed.FS
+
+func IsDir(fileAddr string) bool {
+	s, err := os.Stat(fileAddr)
+	if IfErr(err) {
+		return false
+	}
+	return s.IsDir()
+}
+
 func ListDir() *[]string {
 	var files []string
 	basePath, err := os.Getwd()
@@ -19,9 +31,28 @@ func ListDir() *[]string {
 		log.Printf("can't Get PWD")
 		return nil
 	}
-	filePath := basePath + "/exploit/"
+	filePath := basePath + "/User_Exploit/"
+	if !IsDir(filePath) {
+		err := os.Mkdir(filePath, os.ModePerm)
+		if IfErr(err) {
+			return nil
+		}
+	}
+
+	entries, err := Pocs.ReadDir("exploit")
+	if IfErr(err) {
+		return nil
+	}
+	for _, entry := range entries {
+		entrySplit := strings.Split(entry.Name(), ".")
+		entryExtName := entrySplit[len(entrySplit)-1]
+		if (strings.ToUpper(entryExtName) == "YML") || (strings.ToUpper(entryExtName) == "YAML") {
+			files = append(files, "util/exploit/"+entry.Name())
+		}
+	}
+
 	fileName, err := ioutil.ReadDir(filePath)
-	if err != nil {
+	if IfErr(err) {
 		return nil
 	}
 	for _, file := range fileName {
@@ -54,18 +85,21 @@ func VulExist(rule Rules, host string) (*string, *string, bool) {
 		data = strings.Replace(data, "randomStr", randomStr, -1)
 	}
 	var req Req
-	if followRedirects == "" || followRedirects == "true"{
+	if followRedirects == "" {
 		req = Req{Method: method, Host: host, Path: path, Data: []byte(data), Header: headers, Redirect: true, ProxyUrl: proxy}
-	} else if followRedirects == "false"{
+	} else {
 		req = Req{Method: method, Host: host, Path: path, Data: []byte(data), Header: headers, ProxyUrl: proxy}
 	}
 	statusCode, response, err := req.Requests()
 	if IfErr(err) {
 		return nil, nil, false
 	}
+	//fmt.Println(string(*response))
 	responseExpression := rule.Expression
 	result := responseExpression["result"]
 	responseStatus := responseExpression["response_status"]
+	//fmt.Println(responseStatus)
+	//fmt.Println(result)
 	var res bool
 	rulesInResponse := strings.TrimRight(responseExpression["inResponse"], "\n")
 	rulesInResponse = strings.Replace(rulesInResponse, "randomStr", randomStr, -1)

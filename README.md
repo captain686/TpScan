@@ -72,7 +72,7 @@
   
   在`Xray`的`poc`格式基础上进行部分修改
   
-  `Poc`文件存放在`exploit`目录下
+  `Poc`文件存放在`User_Exploit`目录下
 
 ## 😎ToDo
 
