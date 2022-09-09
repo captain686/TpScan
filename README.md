@@ -49,9 +49,9 @@
   #允许302跳转，默认为true
       expression:
   # r2验证结果为 response_status == 404 && inResponse(randomStr)
-        result: and
+  #      result: and
   #      result: or
-        response_status: 404
+  #      response_status: 404
         inResponse: |
           randomStr
   #randomStr为占位符，会被自动替换为10位随机字符
