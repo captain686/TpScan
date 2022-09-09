@@ -97,13 +97,18 @@ func VulExist(rule Rules, host string) (*string, *string, bool) {
 	//fmt.Println(string(*response))
 	responseExpression := rule.Expression
 	result := responseExpression["result"]
-	responseStatus := responseExpression["response_status"]
-	//fmt.Println(responseStatus)
-	//fmt.Println(result)
-	var res bool
+	var (
+		responseStatus string
+		res bool
+	)
+	responseStatus = responseExpression["response_status"]
+	if responseStatus == "" {
+		responseStatus = "200"
+	}
+	
 	rulesInResponse := strings.TrimRight(responseExpression["inResponse"], "\n")
 	rulesInResponse = strings.Replace(rulesInResponse, "randomStr", randomStr, -1)
-	if result == "and" {
+	if result == "and" || result == "" {
 		responseStatus, err := strconv.Atoi(responseStatus)
 		if err != nil {
 			return nil, nil, false
@@ -125,6 +130,7 @@ func VulExist(rule Rules, host string) (*string, *string, bool) {
 		res = InResponse(response, rulesInResponse)
 	}
 	vulPath := host + path
+	fmt.Println(vulPath)
 	return &vulPath, &data, res
 }
 
