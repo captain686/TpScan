@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/aliyun/texpr"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -26,12 +25,7 @@ func IsDir(fileAddr string) bool {
 
 func ListDir() *[]string {
 	var files []string
-	basePath, err := os.Getwd()
-	if IfErr(err) {
-		log.Printf("can't Get PWD")
-		return nil
-	}
-	filePath := basePath + "/User_Exploit/"
+	filePath := "User_Exploit/"
 	if !IsDir(filePath) {
 		err := os.Mkdir(filePath, os.ModePerm)
 		if IfErr(err) {
@@ -66,12 +60,16 @@ func ListDir() *[]string {
 }
 
 func VulExist(rule Rules, host string) (*string, *string, bool) {
+	var path string
 	method := rule.Request.Method
-	path := rule.Request.Path
+	path = rule.Request.Path
 	headers := rule.Request.Headers
 	followRedirects := rule.Request.FollowRedirects
 	data := rule.Request.Body
 	proxy := rule.Request.Proxy
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
 	for key, value := range headers {
 		if strings.Contains(value, "randomStr") {
 			headers[key] = strings.Replace(value, "randomStr", randomStr, -1)
@@ -99,13 +97,13 @@ func VulExist(rule Rules, host string) (*string, *string, bool) {
 	result := responseExpression["result"]
 	var (
 		responseStatus string
-		res bool
+		res            bool
 	)
 	responseStatus = responseExpression["response_status"]
 	if responseStatus == "" {
 		responseStatus = "200"
 	}
-	
+
 	rulesInResponse := strings.TrimRight(responseExpression["inResponse"], "\n")
 	rulesInResponse = strings.Replace(rulesInResponse, "randomStr", randomStr, -1)
 	if result == "and" || result == "" {
@@ -130,7 +128,6 @@ func VulExist(rule Rules, host string) (*string, *string, bool) {
 		res = InResponse(response, rulesInResponse)
 	}
 	vulPath := host + path
-	fmt.Println(vulPath)
 	return &vulPath, &data, res
 }
 
