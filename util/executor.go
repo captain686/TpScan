@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"github.com/aliyun/texpr"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -23,6 +24,22 @@ func IsDir(fileAddr string) bool {
 	return s.IsDir()
 }
 
+func EmbedFiles() []string {
+	var embedFiles []string
+	entries, err := Pocs.ReadDir("exploit")
+	if IfErr(err) {
+		return nil
+	}
+	for _, entry := range entries {
+		entrySplit := strings.Split(entry.Name(), ".")
+		entryExtName := entrySplit[len(entrySplit)-1]
+		if (strings.ToUpper(entryExtName) == "YML") || (strings.ToUpper(entryExtName) == "YAML") {
+			embedFiles = append(embedFiles, entry.Name())
+		}
+	}
+	return embedFiles
+}
+
 func ListDir() *[]string {
 	var files []string
 	filePath := "User_Exploit/"
@@ -32,19 +49,6 @@ func ListDir() *[]string {
 			return nil
 		}
 	}
-
-	entries, err := Pocs.ReadDir("exploit")
-	if IfErr(err) {
-		return nil
-	}
-	for _, entry := range entries {
-		entrySplit := strings.Split(entry.Name(), ".")
-		entryExtName := entrySplit[len(entrySplit)-1]
-		if (strings.ToUpper(entryExtName) == "YML") || (strings.ToUpper(entryExtName) == "YAML") {
-			files = append(files, "util/exploit/"+entry.Name())
-		}
-	}
-
 	fileName, err := ioutil.ReadDir(filePath)
 	if IfErr(err) {
 		return nil
@@ -137,42 +141,63 @@ func ExpExecutor(host string) {
 		if IfErr(err) {
 			return
 		}
-		rules := exp.Rules
-		VulResults := make(map[string]bool)
-		var vulResults bool
-		var (
-			vulPath *string
-			vulData *string
-		)
-		for ruleName, rule := range rules {
-			vulPath, vulData, vulResults = VulExist(rule, host)
-			VulResults[ruleName] = vulResults
-		}
-		expression := exp.Expression
-		var newExpression string
-		for key, value := range VulResults {
-			newExpression = strings.Replace(expression, key, strconv.FormatBool(value), -1)
-		}
-		compile, err := texpr.Compile(newExpression)
-		if IfErr(err) {
-			fmt.Println(err)
-			return
-		}
-		result, err := compile.Eval(nil)
-		if IfErr(err) {
-			fmt.Println(err)
-			return
-		}
-		//fmt.Println(result)
-		if result == true {
-			fmt.Println("[X] " + host + "存在漏洞")
-			fmt.Println("[X] 漏洞路径" + *vulPath)
-			if *vulData != "" {
-				fmt.Println("[X] 请求数据为 " + *vulData)
-			}
-		} else {
-			fmt.Println("[O] " + host + "不存在漏洞")
-		}
+		vulPath, vulData, result := ExpResult(exp, host)
+		ResultOutput(host, vulPath, vulData, result)
 	}
+	for _, EmbedFile := range EmbedFiles() {
+		data, err := Pocs.ReadFile("exploit/" + EmbedFile)
+		if err != nil {
+			return
+		}
+		//fmt.Println(data)
+		exp := Exploit{}
+		err = yaml.Unmarshal(data, &exp)
+		if err != nil {
+			return
+		}
+		vulPath, vulData, result := ExpResult(&exp, host)
+		ResultOutput(host, vulPath, vulData, result)
+	}
+}
 
+func ResultOutput(host string, vulPath *string, vulData *string, result interface{}) {
+	if result == true {
+		fmt.Println("[X] " + host + "存在漏洞")
+		fmt.Println("[X] 漏洞路径" + *vulPath)
+		if *vulData != "" {
+			fmt.Println("[X] 请求数据为 " + *vulData)
+		}
+	} else {
+		fmt.Println("[O] " + host + "不存在漏洞")
+	}
+}
+
+func ExpResult(exp *Exploit, host string) (*string, *string, interface{}) {
+	rules := exp.Rules
+	VulResults := make(map[string]bool)
+	var vulResults bool
+	var (
+		vulPath *string
+		vulData *string
+	)
+	for ruleName, rule := range rules {
+		vulPath, vulData, vulResults = VulExist(rule, host)
+		VulResults[ruleName] = vulResults
+	}
+	expression := exp.Expression
+	var newExpression string
+	for key, value := range VulResults {
+		newExpression = strings.Replace(expression, key, strconv.FormatBool(value), -1)
+	}
+	compile, err := texpr.Compile(newExpression)
+	if IfErr(err) {
+		fmt.Println(err)
+		return nil, nil, false
+	}
+	result, err := compile.Eval(nil)
+	if IfErr(err) {
+		fmt.Println(err)
+		return nil, nil, false
+	}
+	return vulPath, vulData, result
 }
