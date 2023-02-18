@@ -1,6 +1,6 @@
 module github.com/captain686/TpScan
 
-go 1.18
+go 1.20
 
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0
